@@ -122,7 +122,8 @@ lei<-plot_ly(prisma_lei)%>%
   guides(fill=FALSE)+
   scale_fill_manual(values = "#E69F00")+
   theme_bw()+
-  scale_x_continuous(breaks=seq(min(prisma_lei$ano_lei),max(prisma_lei$ano_lei), by = 1))
+  scale_x_continuous(breaks=seq(min(prisma_lei$ano_lei),max(prisma_lei$ano_lei), by = 1))+
+  ggtitle("Ano do empenho (R$ bi)")
 
 
 
@@ -139,7 +140,9 @@ ano<-plot_ly(prisma_pago)%>%
   ylim(0,yl)+
   guides(fill=FALSE)+
   theme_bw()+
-  scale_x_continuous(breaks=seq(min(prisma_lei$ano_lei),max(prisma_lei$ano_lei), by = 1))
+  scale_x_continuous(breaks=seq(min(prisma_lei$ano_lei),max(prisma_lei$ano_lei), by = 1))+
+  ggtitle("Ano do pagamento (R$ bi)")
+  
 
 #chart_link = api_create(lei, filename="rp_lei")
 #chart_link
