@@ -1,0 +1,149 @@
+---
+title: "prisma"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+options(scipen=999)
+options(digits = 2)
+```
+
+```{r}
+library(dplyr)
+library(readxl)
+library(ggplot2)
+library(stringr)
+library(plotly)
+library(broman)
+library("ggpubr")
+```
+
+
+
+```{r}
+prisma <- read_excel("pago.xlsx")
+colnames(prisma)<- c("ano_lei", "ano_despesa",  "valor")
+
+
+
+ano<- unique(prisma$ano_lei)
+valor<- c(rep(1,length(ano)))
+ano_plot<- data.frame(ano,valor)
+
+
+
+```
+
+
+
+
+```{r}
+
+zz<- c("2015","2016","2017")
+yy<- c("2020")
+prisma_lei<- prisma%>%
+  group_by(ano_lei)
+
+prisma_pago<- prisma%>%
+  group_by(ano_despesa)%>%
+  select(ano_despesa, valor)%>%
+  summarise(pago=sum(valor))
+
+lei<-plot_ly(prisma_lei)%>%
+ ggplot() +
+
+  geom_bar(data=prisma_lei, aes(x = ano_lei, y = valor), stat = "identity", position=position_dodge())+
+  geom_bar(data=ano_plot, aes(x = ano, y= valor), stat = "identity")
+
+
+
+
+
+lei
+
+
+ano<-plot_ly(prisma_pago)%>%
+ ggplot() +
+  geom_bar(data=ano_plot, aes(x = ano, y= valor), stat = "identity")+
+  geom_bar(data=prisma_pago, aes(x = ano_despesa, y = pago), stat = "identity", position=position_dodge())
+
+#chart_link = api_create(lei, filename="rp_lei")
+#chart_link
+
+ano
+
+```
+
+
+
+
+
+```{r}
+prisma <- read_excel("prisma.xlsx")
+colnames(prisma)<- c("ano_lei", "ano_despesa", "gnd", "exec","uo", "valor")
+
+prisma$ano_lei<- as.numeric(prisma$ano_lei)
+prisma$ano_despesa<- as.numeric(prisma$ano_despesa)
+
+prisma<- na.omit(prisma)
+ano<- unique(prisma$ano_lei)
+valor<- c(rep(1,length(ano)))
+ano_plot<- data.frame(ano,valor)
+
+
+
+```
+
+
+
+
+```{r}
+
+zz<- c("2015","2016","2017")
+yy<- c("2020")
+prisma_lei<- prisma%>%
+  group_by(ano_lei)%>%
+  summarise(pago=sum(valor/1000000000))
+
+prisma_pago<- prisma%>%
+  group_by(ano_despesa)%>%
+  select(ano_despesa, valor)%>%
+  summarise(pago=sum(valor/1000000000))
+
+yl <-ifelse (max(prisma_pago$pago)>max(prisma_lei$pago), max(prisma_pago$pago),max(prisma_lei$pago))
+
+lei<-plot_ly(prisma_lei)%>%
+ ggplot() +
+
+  geom_bar(data=prisma_lei, aes(x = ano_lei, y = pago, fill="#000000" ), stat = "identity", colour="#000000")+
+  geom_bar(data=ano_plot, aes(x = ano, y= valor ), stat = "identity")+
+  ylim(0,yl)+
+  guides(fill=FALSE)+
+  scale_fill_manual(values = "#E69F00")+
+  theme_bw()+
+  scale_x_continuous(breaks=seq(min(prisma_lei$ano_lei),max(prisma_lei$ano_lei), by = 1))
+
+
+
+
+
+
+lei
+
+
+ano<-plot_ly(prisma_pago)%>%
+ ggplot() +
+  geom_bar(data=ano_plot, aes(x = ano, y= valor), stat = "identity")+
+  geom_bar(data=prisma_pago, aes(x = ano_despesa, y = pago, fill="#ff0000" ), stat = "identity",  colour="red")+
+  ylim(0,yl)+
+  guides(fill=FALSE)+
+  theme_bw()+
+  scale_x_continuous(breaks=seq(min(prisma_lei$ano_lei),max(prisma_lei$ano_lei), by = 1))
+
+#chart_link = api_create(lei, filename="rp_lei")
+#chart_link
+
+ano
+
+```
