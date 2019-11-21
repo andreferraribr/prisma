@@ -16,6 +16,7 @@ library(plotly)
 library(broman)
 library(ggpubr)
 
+
 prisma <- read_excel("prisma.xlsx")
 prisam<- na.omit(prisma)
 colnames(prisma)<- c("ano_lei", "ano_despesa", "gnd", "exec","uo", "valor")
@@ -42,11 +43,17 @@ ui <- fluidPage(
                         value = c(min(prisma$ano_lei), max = max(prisma$ano_lei)),
                         step = 1),
             
+            
             # Input: Decimal interval with step value ----
             sliderInput("ano_pgt", "ano do pagamento:",
                         min = min(prisma$ano_despesa), max = max(prisma$ano_despesa),
                         value = c(min(prisma$ano_despesa), max = max(prisma$ano_despesa)),
-                        step = 1)
+                        step = 1),
+            
+            # Input: Decimal interval with step value ----
+            checkboxGroupInput("gnd", "grupo da despesa", 
+                               choices = unique(prisma$gnd),
+                               selected = unique(prisma$gnd))
             
         ),
         # Show a plot of the generated distribution
@@ -65,7 +72,8 @@ server <- function(input, output) {
     output$ano_lei <- renderPlot({
       prisma_lei<- prisma%>%
         filter(ano_lei >=  min(input$ano_loa) & ano_lei <=  max(input$ano_loa),
-               ano_despesa >=  min(input$ano_pgt) & ano_despesa <=  max(input$ano_pgt) )%>%
+               ano_despesa >=  min(input$ano_pgt) & ano_despesa <=  max(input$ano_pgt),
+               gnd %in% input$gnd)%>%
         group_by(ano_lei)%>%
         summarise(pago=sum(valor/1000000000))
       
@@ -102,7 +110,8 @@ server <- function(input, output) {
       
       prisma_pago<- prisma%>%
         filter(ano_lei >=  min(input$ano_loa) & ano_lei <=  max(input$ano_loa),
-               ano_despesa >=  min(input$ano_pgt) & ano_despesa <=  max(input$ano_pgt) )%>%
+               ano_despesa >=  min(input$ano_pgt) & ano_despesa <=  max(input$ano_pgt),
+               gnd %in% input$gnd)%>%
         group_by(ano_despesa)%>%
         select(ano_despesa, valor)%>%
         summarise(pago=sum(valor/1000000000))
