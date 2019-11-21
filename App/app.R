@@ -30,15 +30,14 @@ prisma<- na.omit(prisma)
 # Define UI for application that draws a histogram
 ui <- fluidPage(
 
-    # Application title
-    titlePanel("Ano Empenho x Ano Pagamento"),
+    
 
     # Sidebar with a slider input for number of bins 
     sidebarLayout(
-        sidebarPanel(
+        sidebarPanel(height =  50,
             
             # Input: Simple integer interval ----
-            sliderInput("ano_loa", "ano da LOA:",
+            sliderInput("ano_loa", "ano do empenho:",
                         min = min(prisma$ano_lei), max = max(prisma$ano_lei),
                         value = c(min(prisma$ano_lei), max = max(prisma$ano_lei)),
                         step = 1),
@@ -51,15 +50,15 @@ ui <- fluidPage(
                         step = 1),
             
             # Input: Decimal interval with step value ----
-            checkboxGroupInput("gnd", "grupo da despesa", 
-                               choices = unique(prisma$gnd),
-                               selected = unique(prisma$gnd))
+            selectInput ("gnd", label = "grupo da despesa",
+                         choices = unique(prisma$gnd),
+                         selected = "INVESTIMENTOS" )
             
         ),
         # Show a plot of the generated distribution
         mainPanel(
-           plotOutput("ano_lei"),
-           plotOutput("ano_pgt")
+           plotOutput("ano_lei", height =  200),
+           plotOutput("ano_pgt", height =  200)
         )
     )
 )
@@ -67,7 +66,7 @@ ui <- fluidPage(
 # Define server logic required to draw a histogram
 server <- function(input, output) {
   
-
+   
 
     output$ano_lei <- renderPlot({
       prisma_lei<- prisma%>%
@@ -91,7 +90,22 @@ server <- function(input, output) {
           scale_fill_manual(values = "#E69F00")+
           theme_bw()+
           scale_x_continuous(limits=c(2007,2020), breaks  = c(2008, 2009,2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2017, 2018, 2019))+
-          ggtitle("Ano do empenho (R$ bi)")
+          ggtitle("ano do empenho (R$ bi)")+
+          theme(plot.title=element_text(family='', face='bold', colour='#cc6600', size=11))+
+          theme(axis.title.x = element_blank())+
+          theme(axis.title.y = element_blank())+
+          theme(axis.text.x = element_text(size = 8)) +
+          geom_text(aes(x=ano_lei, y=pago, label = round(pago)), hjust = 1, vjust = 0, nudge_x = 0.1, nudge_y = 1)+ theme(
+            # Remove panel border
+            panel.border = element_blank(),  
+            # Remove panel grid lines
+            panel.grid.major = element_blank(),
+            panel.grid.minor = element_blank(),
+            # Remove panel background
+            panel.background = element_blank(),
+            # Add axis line
+            axis.line = element_line(colour = "grey")
+          )
       
       
       
@@ -116,7 +130,7 @@ server <- function(input, output) {
         select(ano_despesa, valor)%>%
         summarise(pago=sum(valor/1000000000))
       
-     
+
       
       ano<-plot_ly(prisma_pago)%>%
         ggplot() +
@@ -124,7 +138,22 @@ server <- function(input, output) {
         guides(fill=FALSE)+
         theme_bw()+
         scale_x_continuous(limits=c(2007,2020), breaks  = c(2008, 2009,2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2017, 2018, 2019))+
-        ggtitle("Ano do pagamento (R$ bi)")
+        ggtitle("ano do pagamento (R$ bi)")+
+        theme(plot.title=element_text(family='', face='bold', colour='#ff0000', size=11))+
+        theme(axis.title.x = element_blank())+
+        theme(axis.title.y = element_blank())+
+        theme(axis.text.x = element_text(size = 8)) + 
+        geom_text(aes(x=ano_despesa, y=pago, label = round(pago)), hjust = 1, vjust = 0, nudge_x = 0.1, nudge_y = 1)+ theme(
+          # Remove panel border
+          panel.border = element_blank(),  
+          # Remove panel grid lines
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank(),
+          # Remove panel background
+          panel.background = element_blank(),
+          # Add axis line
+          axis.line = element_line(colour = "grey")
+        )
       
      
       
