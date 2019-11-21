@@ -8,23 +8,29 @@
 #
 
 library(shiny)
+library(dplyr)
+library(readxl)
+library(ggplot2)
+library(stringr)
+library(plotly)
+library(broman)
+library(ggpubr)
 
 prisma <- read_excel("prisma.xlsx")
+prisam<- na.omit(prisma)
 colnames(prisma)<- c("ano_lei", "ano_despesa", "gnd", "exec","uo", "valor")
 
 prisma$ano_lei<- as.numeric(prisma$ano_lei)
 prisma$ano_despesa<- as.numeric(prisma$ano_despesa)
 
 prisma<- na.omit(prisma)
-ano<- unique(prisma$ano_lei)
-valor<- c(rep(0.0001,length(ano)))
-ano_plot<- data.frame(ano,valor)
+
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(
 
     # Application title
-    titlePanel("Old Faithful Geyser Data"),
+    titlePanel("Ano Empenho x Ano Pagamento"),
 
     # Sidebar with a slider input for number of bins 
     sidebarLayout(
@@ -58,24 +64,26 @@ server <- function(input, output) {
 
     output$ano_lei <- renderPlot({
       prisma_lei<- prisma%>%
-        filter(ano_lei %in% input$ano_loa,ano_despesa %in% input$ano_pgt )%>%
+        filter(ano_lei >=  min(input$ano_loa) & ano_lei <=  max(input$ano_loa),
+               ano_despesa >=  min(input$ano_pgt) & ano_despesa <=  max(input$ano_pgt) )%>%
         group_by(ano_lei)%>%
         summarise(pago=sum(valor/1000000000))
       
-
+      prisma_pago<- prisma%>%
+        group_by(ano_despesa)%>%
+        select(ano_despesa, valor)%>%
+        summarise(pago=sum(valor/1000000000))
       
-      yl <-ifelse (max(prisma_pago$pago)>max(prisma_lei$pago), max(prisma_pago$pago),max(prisma_lei$pago))
-      
+     
       
         ggplot(prisma_lei) +
         
-        geom_bar(data=prisma_lei, aes(x = ano_lei, y = pago, fill="#000000" ), stat = "identity", colour="#000000")+
-        geom_bar(data=ano_plot, aes(x = ano, y= valor ), stat = "identity")+
-        ylim(0,yl)+
-        guides(fill=FALSE)+
-        scale_fill_manual(values = "#E69F00")+
-        theme_bw()+
-        ggtitle("Ano do empenho (R$ bi)")
+          geom_bar(data=prisma_lei, aes(x = ano_lei, y = pago, fill="#000000" ), stat = "identity", colour="#000000", width = .9)+
+          guides(fill=FALSE)+
+          scale_fill_manual(values = "#E69F00")+
+          theme_bw()+
+          scale_x_continuous(limits=c(2007,2020), breaks  = c(2008, 2009,2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2017, 2018, 2019))+
+          ggtitle("Ano do empenho (R$ bi)")
       
       
       
@@ -93,19 +101,20 @@ server <- function(input, output) {
       
       
       prisma_pago<- prisma%>%
-        filter(ano_lei %in% input$ano_loa,ano_despesa %in% input$ano_pgt )%>%
+        filter(ano_lei >=  min(input$ano_loa) & ano_lei <=  max(input$ano_loa),
+               ano_despesa >=  min(input$ano_pgt) & ano_despesa <=  max(input$ano_pgt) )%>%
         group_by(ano_despesa)%>%
         select(ano_despesa, valor)%>%
         summarise(pago=sum(valor/1000000000))
       
-      yl <-ifelse (max(prisma_pago$pago)>max(prisma_lei$pago), max(prisma_pago$pago),max(prisma_lei$pago))
+     
       
       ano<-plot_ly(prisma_pago)%>%
         ggplot() +
-        geom_bar(data=prisma_pago, aes(x = ano_despesa, y = pago, fill="#ff0000" ), stat = "identity",  colour="red")+
-        ylim(0,yl)+
+        geom_bar(data=prisma_pago, aes(x = ano_despesa, y = pago, fill="#ff0000" ), stat = "identity",  colour="red", width = .9)+
         guides(fill=FALSE)+
         theme_bw()+
+        scale_x_continuous(limits=c(2007,2020), breaks  = c(2008, 2009,2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2017, 2018, 2019))+
         ggtitle("Ano do pagamento (R$ bi)")
       
      

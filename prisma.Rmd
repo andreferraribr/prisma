@@ -83,8 +83,8 @@ ano
 prisma <- read_excel("prisma.xlsx")
 colnames(prisma)<- c("ano_lei", "ano_despesa", "gnd", "exec","uo", "valor")
 
-prisma$ano_lei<- as.numeric(prisma$ano_lei)
-prisma$ano_despesa<- as.numeric(prisma$ano_despesa)
+prisma$ano_lei<- (prisma$ano_lei)
+prisma$ano_despesa<- (prisma$ano_despesa)
 
 prisma<- na.omit(prisma)
 ano<- unique(prisma$ano_lei)
@@ -100,29 +100,28 @@ ano_plot<- data.frame(ano,valor)
 
 ```{r}
 
-zz<- c("2015","2016","2017")
-yy<- c("2020")
+zz<- c("2008", "2015")
+yy<- c("2019","2014")
 prisma_lei<- prisma%>%
+  filter(ano_lei %in% zz, ano_despesa %in% yy )%>%
   group_by(ano_lei)%>%
   summarise(pago=sum(valor/1000000000))
 
 prisma_pago<- prisma%>%
+  filter(ano_lei %in% zz, ano_despesa %in% yy )%>%
   group_by(ano_despesa)%>%
   select(ano_despesa, valor)%>%
   summarise(pago=sum(valor/1000000000))
 
-yl <-ifelse (max(prisma_pago$pago)>max(prisma_lei$pago), max(prisma_pago$pago),max(prisma_lei$pago))
 
 lei<-plot_ly(prisma_lei)%>%
  ggplot() +
 
-  geom_bar(data=prisma_lei, aes(x = ano_lei, y = pago, fill="#000000" ), stat = "identity", colour="#000000")+
-  geom_bar(data=ano_plot, aes(x = ano, y= valor ), stat = "identity")+
-  ylim(0,yl)+
+  geom_bar(data=prisma_lei, aes(x = ano_lei, y = pago, fill="#000000" ), stat = "identity", colour="#000000", width = .9)+
   guides(fill=FALSE)+
   scale_fill_manual(values = "#E69F00")+
   theme_bw()+
-  scale_x_continuous(breaks=seq(min(prisma_lei$ano_lei),max(prisma_lei$ano_lei), by = 1))+
+  scale_x_continuous(limits=c(2007,2020), breaks  = c(2008, 2009,2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2017, 2018, 2019))+
   ggtitle("Ano do empenho (R$ bi)")
 
 
@@ -135,12 +134,10 @@ lei
 
 ano<-plot_ly(prisma_pago)%>%
  ggplot() +
-  geom_bar(data=ano_plot, aes(x = ano, y= valor), stat = "identity")+
-  geom_bar(data=prisma_pago, aes(x = ano_despesa, y = pago, fill="#ff0000" ), stat = "identity",  colour="red")+
-  ylim(0,yl)+
+  geom_bar(data=prisma_pago, aes(x = ano_despesa, y = pago, fill="#ff0000" ), stat = "identity",  colour="red", width = .9)+
   guides(fill=FALSE)+
   theme_bw()+
-  scale_x_continuous(breaks=seq(min(prisma_lei$ano_lei),max(prisma_lei$ano_lei), by = 1))+
+ scale_x_continuous(limits=c(2007,2020), breaks  = c(2008, 2009,2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2017, 2018, 2019))+
   ggtitle("Ano do pagamento (R$ bi)")
   
 
