@@ -1,11 +1,14 @@
 ---
-title: "teste"
-output: flexdashboard::flex_dashboard
+title: "flex"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: columns
+    vertical_layout: fill
 runtime: shiny
 ---
 
-```{r global, include=FALSE}
-# load data in 'global' chunk so it can be shared by all users of the dashboard
+```{r setup, include=FALSE}
+library(flexdashboard)
 library(datasets)
 library(shiny)
 library(dplyr)
@@ -18,29 +21,35 @@ library(ggpubr)
 prisma <- read_excel("prisma.xlsx")
 prisam<- na.omit(prisma)
 colnames(prisma)<- c("ano_lei", "ano_despesa", "gnd", "exec","uo", "valor")
-
 prisma$ano_lei<- as.numeric(prisma$ano_lei)
 prisma$ano_despesa<- as.numeric(prisma$ano_despesa)
-
 prisma<- na.omit(prisma)
 
 ```
 
-Column {.sidebar}
+Selecione o período {.sidebar}
 -----------------------------------------------------------------------
 
-Waiting time between eruptions and the duration of the eruption for the
-Old Faithful geyser in Yellowstone National Park, Wyoming, USA.
+###### Ano do empenho do investimento:
 
 ```{r}
-sliderInput("ano_loa", "ano do empenho/autorização do investimento:",
+sliderInput("ano_loa", "",
                         min = min(prisma$ano_lei), max = max(prisma$ano_lei),
                         value = c(min(prisma$ano_lei), max = max(prisma$ano_lei)),
                         step = 1)
+
+```
+
+
+
+
+
+###### Ano do pagamento do investimento:
+```{r}
             
             
             # Input: Decimal interval with step value ----
-sliderInput("ano_pgt", "ano do pagamento do investimento:",
+sliderInput("ano_pgt", "",
                         min = min(prisma$ano_despesa), max = max(prisma$ano_despesa),
                         value = c(min(prisma$ano_despesa), max = max(prisma$ano_despesa)),
                         step = 1)
@@ -48,10 +57,13 @@ sliderInput("ano_pgt", "ano do pagamento do investimento:",
 ```
 
 
-Column
+
+Colunm 
 -----------------------------------------------------------------------
 
-## Chart 1 {.mobile}
+
+
+### Ano do empenho do investimento (R$ bi) {.no-mobile}
 
 ```{r}
 renderPlot({
@@ -73,12 +85,12 @@ renderPlot({
           scale_fill_manual(values = "#E69F00")+
           theme_bw()+
           scale_x_continuous(limits=c(2007,2020), breaks  = c(2008, 2009,2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2017, 2018, 2019))+
-          ggtitle("ano do empenho/autorização do investimento (R$ bi)")+
+          ggtitle("")+
           theme(plot.title=element_text(family='', face='bold', colour='#cc6600', size=11))+
           theme(axis.title.x = element_blank())+
           theme(axis.title.y = element_blank())+
-          theme(axis.text.x = element_text(size = 7)) +
-          geom_text(aes(x=ano_lei, y=pago, label = round(pago,2)), size = 2.5,  vjust = -0.5)+ 
+          theme(axis.text.x = element_text(size = 8)) +
+          geom_text(aes(x=ano_lei, y=pago, label = round(pago,2)), size = 3,  vjust = -0.5)+ 
           theme(
             # Remove panel border
             panel.border = element_blank(),  
@@ -104,7 +116,7 @@ renderPlot({
     })
 ```
 
-## Chart 2 {.mobile}
+### Ano do pagamento do investimento (R$ bi) {.no-mobile}
 ```{r}
 renderPlot({
       
@@ -117,7 +129,6 @@ renderPlot({
         select(ano_despesa, valor)%>%
         summarise(pago=sum(valor/1000000000))
       
-
       
       ano<-plot_ly(prisma_pago)%>%
         ggplot() +
@@ -125,12 +136,12 @@ renderPlot({
         guides(fill=FALSE)+
         theme_bw()+
         scale_x_continuous(limits=c(2007,2020), breaks  = c(2008, 2009,2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2017, 2018, 2019))+
-        ggtitle("ano do pagamento do investimento (R$ bi)")+
+        ggtitle("")+
         theme(plot.title=element_text(family='', face='bold', colour='#ff0000', size=11))+
         theme(axis.title.x = element_blank())+
         theme(axis.title.y = element_blank())+
-        theme(axis.text.x = element_text(size = 7)) + 
-        geom_text(aes(x=ano_despesa, y=pago, label = round(pago,2)), size = 2.5 ,  vjust = -0.5)+ 
+        theme(axis.text.x = element_text(size = 8)) + 
+        geom_text(aes(x=ano_despesa, y=pago, label = round(pago,2)), size = 3 ,  vjust = -0.5)+ 
         theme(
           # Remove panel border
           panel.border = element_blank(),  
