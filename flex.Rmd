@@ -24,11 +24,16 @@ colnames(prisma)<- c("ano_lei", "ano_despesa", "gnd", "exec","uo", "valor")
 prisma$ano_lei<- as.numeric(prisma$ano_lei)
 prisma$ano_despesa<- as.numeric(prisma$ano_despesa)
 prisma<- na.omit(prisma)
+prisma<-prisma%>%
+  mutate(temporal = ifelse(ano_lei == ano_despesa, "loa", "rp"))
+
 
 ```
 
+
+
 Selecione o período {.sidebar}
------------------------------------------------------------------------
+=======================================================================
 
 ###### Ano do empenho do investimento:
 
@@ -56,14 +61,67 @@ sliderInput("ano_pgt", "",
             
 ```
 
+Dashboard
+=======================================================================
 
+Row
+-----------------------------------------------------------------------
+```{r}
+# dlCount is a reactive expression that keeps track of the total
+# number of rows that have ever appeared through pkgStream.
 
-Colunm 
+      
+     
+      
+# Emit the download count
+renderValueBox({
+  
+  rp_pg <-  prisma%>%
+        filter(ano_lei >=  min(input$ano_loa) & ano_lei <=  max(input$ano_loa),
+               ano_despesa >=  min(input$ano_pgt) & ano_despesa <=  max(input$ano_pgt),
+               temporal == "rp",
+               gnd == "INVESTIMENTOS")%>%
+        group_by( temporal)%>%
+        summarise(pago=round(sum(valor/1000000000),2))
+  
+  
+  valueBox(rp_pg, icon = "fa-download")
+})
+```
+
+Row
 -----------------------------------------------------------------------
 
+```{r}
+# dlCount is a reactive expression that keeps track of the total
+# number of rows that have ever appeared through pkgStream.
+
+      
+     
+      
+# Emit the download count
+renderValueBox({
+  
+  loa_pg <-  prisma%>%
+        filter(ano_lei >=  min(input$ano_loa) & ano_lei <=  max(input$ano_loa),
+               ano_despesa >=  min(input$ano_pgt) & ano_despesa <=  max(input$ano_pgt),
+               temporal == "loa",
+               gnd == "INVESTIMENTOS")%>%
+        group_by( temporal)%>%
+        summarise(pago=round(sum(valor/1000000000),2))
+  
+  
+  valueBox(loa_pg, icon = "fa-download")
+})
+```
 
 
-### Ano do empenho do investimento (R$ bi) {.no-mobile}
+
+
+Row
+-----------------------------------------------------------------------
+
+### Ano do empenho do investimento (R$ bi) 
 
 ```{r}
 renderPlot({
@@ -71,18 +129,18 @@ renderPlot({
         filter(ano_lei >=  min(input$ano_loa) & ano_lei <=  max(input$ano_loa),
                ano_despesa >=  min(input$ano_pgt) & ano_despesa <=  max(input$ano_pgt),
                gnd == "INVESTIMENTOS")%>%
-        group_by(ano_lei)%>%
+        group_by(ano_lei, temporal)%>%
         summarise(pago=sum(valor/1000000000))
       
      
       
-     
+        
       
         ggplot(prisma_lei) +
         
-          geom_bar(data=prisma_lei, aes(x = ano_lei, y = pago, fill="#000000" ), stat = "identity", colour="#000000", width = .9)+
+          geom_bar(data=prisma_lei, aes(x = ano_lei, y = pago, fill=temporal ), stat = "identity",  width = .9)+
           guides(fill=FALSE)+
-          scale_fill_manual(values = "#E69F00")+
+          scale_fill_manual(values = c("loa" = "blue", "rp" = "red"))+
           theme_bw()+
           scale_x_continuous(limits=c(2007,2020), breaks  = c(2008, 2009,2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2017, 2018, 2019))+
           ggtitle("")+
@@ -90,7 +148,7 @@ renderPlot({
           theme(axis.title.x = element_blank())+
           theme(axis.title.y = element_blank())+
           theme(axis.text.x = element_text(size = 8)) +
-          geom_text(aes(x=ano_lei, y=pago, label = round(pago,2)), size = 3,  vjust = -0.5)+ 
+          
           theme(
             # Remove panel border
             panel.border = element_blank(),  
@@ -100,7 +158,8 @@ renderPlot({
             # Remove panel background
             panel.background = element_blank(),
             # Add axis line
-            axis.line = element_line(colour = "grey")
+            axis.line = element_line(colour = "grey"),
+            legend.position="top"
           )
       
       
@@ -116,7 +175,10 @@ renderPlot({
     })
 ```
 
-### Ano do pagamento do investimento (R$ bi) {.no-mobile}
+
+
+
+### Ano do pagamento do investimento (R$ bi) 
 ```{r}
 renderPlot({
       
@@ -125,15 +187,16 @@ renderPlot({
         filter(ano_lei >=  min(input$ano_loa) & ano_lei <=  max(input$ano_loa),
                ano_despesa >=  min(input$ano_pgt) & ano_despesa <=  max(input$ano_pgt),
                gnd == "INVESTIMENTOS")%>%
-        group_by(ano_despesa)%>%
-        select(ano_despesa, valor)%>%
+        group_by(ano_despesa, temporal)%>%
+        select(ano_despesa, temporal, valor)%>%
         summarise(pago=sum(valor/1000000000))
       
       
       ano<-plot_ly(prisma_pago)%>%
         ggplot() +
-        geom_bar(data=prisma_pago, aes(x = ano_despesa, y = pago, fill="#ff0000" ), stat = "identity",  colour="red", width = .9)+
+        geom_bar(data=prisma_pago, aes(x = ano_despesa, y = pago, fill= temporal ), stat = "identity",   width = .9)+
         guides(fill=FALSE)+
+        scale_fill_manual(values = c("loa" = "blue", "rp" = "red"))+
         theme_bw()+
         scale_x_continuous(limits=c(2007,2020), breaks  = c(2008, 2009,2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2017, 2018, 2019))+
         ggtitle("")+
@@ -141,7 +204,7 @@ renderPlot({
         theme(axis.title.x = element_blank())+
         theme(axis.title.y = element_blank())+
         theme(axis.text.x = element_text(size = 8)) + 
-        geom_text(aes(x=ano_despesa, y=pago, label = round(pago,2)), size = 3 ,  vjust = -0.5)+ 
+        
         theme(
           # Remove panel border
           panel.border = element_blank(),  
@@ -151,7 +214,8 @@ renderPlot({
           # Remove panel background
           panel.background = element_blank(),
           # Add axis line
-          axis.line = element_line(colour = "grey")
+          axis.line = element_line(colour = "grey"),
+          legend.position="top"
         )
       
      
@@ -166,3 +230,5 @@ renderPlot({
     })
 ```
 
+Dashboard2
+=======================================================================
